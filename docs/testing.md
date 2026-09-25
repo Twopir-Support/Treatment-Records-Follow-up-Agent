@@ -31,6 +31,8 @@ The Apex tests are written against real behaviour: DML, flows, validation rules,
 | `FollowUpConfigTest` | Configuration | CSV parsing; inactive/threshold-less rules skipped; safe defaults when unconfigured; classification ordering; deployed CMDT loads |
 | `FollowUpEinsteinTest` (`agentforce/`) | Prompt grounding and adapters | grounding has facts, placeholder, no DOB/Ids; no-access grounding; JSON parsing with fences; template routing; LLM failure reported not thrown; classification parsing |
 
+Test classes create up to three Standard User licences each, so run them in an **Enterprise** scratch org (`config/project-scratch-def.json`) or a sandbox; Developer Edition licence limits can fail user creation.
+
 Tests inject configuration in memory (`FollowUpTestDataFactory.useDefaultConfig()`), so results don't depend on the org's CMDT values. `FollowUpConfigTest` separately checks that the deployed records load.
 
 ## 3. Governor-limit design (what the bulk test protects)

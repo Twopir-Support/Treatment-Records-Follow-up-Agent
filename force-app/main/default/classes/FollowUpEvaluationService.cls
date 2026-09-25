@@ -157,7 +157,15 @@ public with sharing class FollowUpEvaluationService {
             }
         }
         if (!updates.isEmpty()) {
-            Database.update(updates, false, AccessLevel.SYSTEM_MODE);
+            List<Database.SaveResult> updateResults = Database.update(updates, false, AccessLevel.SYSTEM_MODE);
+            for (Integer i = 0; i < updateResults.size(); i++) {
+                if (!updateResults[i].isSuccess()) {
+                    summary.errors++;
+                    summary.messages.add(
+                        'Task created but status update failed for ' + updates[i].Id + ': ' + firstError(updateResults[i])
+                    );
+                }
+            }
         }
     }
 

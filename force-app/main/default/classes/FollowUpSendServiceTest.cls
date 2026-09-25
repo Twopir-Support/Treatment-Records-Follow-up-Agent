@@ -25,6 +25,9 @@ private class FollowUpSendServiceTest {
         Follow_Up_Recommendation__c internal = FollowUpTestDataFactory.pendingRecommendation(matter.Id, 'Internal', 'Task', null, null);
         internal.Recommendation_Type__c = FollowUpConstants.TYPE_MISSING_BILLS;
         internal.Dedupe_Key__c = 'SEND|INTERNAL';
+        for (Follow_Up_Recommendation__c rec : new List<Follow_Up_Recommendation__c>{ email, sms, fax, internal }) {
+            rec.Assigned_To__c = caseManager.Id;
+        }
         insert new List<Follow_Up_Recommendation__c>{ email, sms, fax, internal };
     }
 

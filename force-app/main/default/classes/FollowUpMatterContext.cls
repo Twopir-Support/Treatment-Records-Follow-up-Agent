@@ -82,6 +82,16 @@ public with sharing class FollowUpMatterContext {
                 sent.add(rec);
             }
         }
+        // History is ordered by CreatedDate; callers need the most recently SENT first.
+        List<SentOrder> ordered = new List<SentOrder>();
+        for (Follow_Up_Recommendation__c rec : sent) {
+            ordered.add(new SentOrder(rec));
+        }
+        ordered.sort();
+        sent.clear();
+        for (SentOrder item : ordered) {
+            sent.add(item.rec);
+        }
         return sent;
     }
 
@@ -165,5 +175,17 @@ public with sharing class FollowUpMatterContext {
             return current;
         }
         return (current == null || candidate > current) ? candidate : current;
+    }
+
+    private class SentOrder implements Comparable {
+        private Follow_Up_Recommendation__c rec;
+        private SentOrder(Follow_Up_Recommendation__c rec) {
+            this.rec = rec;
+        }
+        public Integer compareTo(Object other) {
+            Datetime mine = rec.Sent_Date__c;
+            Datetime theirs = ((SentOrder) other).rec.Sent_Date__c;
+            return mine == theirs ? 0 : (mine > theirs ? -1 : 1);
+        }
     }
 }

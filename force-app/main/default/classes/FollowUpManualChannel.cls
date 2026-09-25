@@ -11,7 +11,13 @@ public with sharing class FollowUpManualChannel implements IFollowUpChannel {
         for (Follow_Up_Recommendation__c rec : recommendations) {
             Task task = FollowUpEvaluationService.buildTask(rec, rec.Matter__r == null ? '' : rec.Matter__r.Name);
             if (rec.Audience__c != FollowUpConstants.AUDIENCE_INTERNAL) {
-                task.Subject = ('Deliver approved ' + rec.Channel__c + ': ' + rec.Name).left(255);
+                // Outbound prefix: completing this delivery Task is not "client contact" for the stalled rule.
+                task.Subject = (FollowUpMatterSelector.OUTBOUND_TASK_PREFIX +
+                    ' deliver approved ' +
+                    rec.Channel__c +
+                    ' - ' +
+                    rec.Name)
+                    .left(255);
                 task.Description =
                     recipientLine(rec) +
                     '\n\n' +

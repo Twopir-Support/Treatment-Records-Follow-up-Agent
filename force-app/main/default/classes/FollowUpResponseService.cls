@@ -28,6 +28,7 @@ public with sharing class FollowUpResponseService {
     }
 
     public class ResponseResult {
+        public Id recommendationId;
         @AuraEnabled
         public String recommendationName;
         @AuraEnabled
@@ -46,12 +47,18 @@ public with sharing class FollowUpResponseService {
     private static IFollowUpResponseClassifier aiClassifierOverride;
 
     public static List<ResponseResult> logResponses(List<ResponseInput> inputs) {
+        Set<String> allowed = allowedCategories();
+        for (ResponseInput input : inputs) {
+            // Validate before resolveTargets, which may insert holder records.
+            if (input != null && String.isNotBlank(input.category) && !allowed.contains(input.category)) {
+                throw new FollowUpException(String.format(Label.FollowUp_Error_Invalid_Category, new List<String>{ input.category }));
+            }
+        }
         Map<String, Follow_Up_Recommendation__c> targets = resolveTargets(inputs);
         Map<Id, Follow_Up_Recommendation__c> uniqueTargets = new Map<Id, Follow_Up_Recommendation__c>();
         for (Follow_Up_Recommendation__c rec : targets.values()) {
             uniqueTargets.put(rec.Id, rec);
         }
-        Set<String> allowed = allowedCategories();
         Boolean aiConfigured = resolveAiClassifier() != null;
 
         Map<Id, FollowUpClassification> classifications = new Map<Id, FollowUpClassification>();
@@ -67,9 +74,6 @@ public with sharing class FollowUpResponseService {
             rec.Response_Text__c = input.responseText.left(5000);
             sources.put(rec.Id, String.isBlank(input.source) ? 'Response' : input.source.left(40));
             if (String.isNotBlank(input.category)) {
-                if (!allowed.contains(input.category)) {
-                    throw new FollowUpException(String.format(Label.FollowUp_Error_Invalid_Category, new List<String>{ input.category }));
-                }
                 Decimal confidence = input.confidence == null ? 1 : Math.min(Math.max(input.confidence, 0), 1);
                 classifications.put(rec.Id, new FollowUpClassification(rec.Id, input.category, confidence, 'Human'));
             } else if (aiConfigured) {
@@ -83,18 +87,27 @@ public with sharing class FollowUpResponseService {
             classifications.put(classification.recommendationId, classification);
         }
 
-        List<ResponseResult> results = applyAndSave(uniqueTargets.values(), classifications, sources);
+        Map<Id, ResponseResult> byRecommendation = new Map<Id, ResponseResult>();
+        for (ResponseResult result : applyAndSave(uniqueTargets.values(), classifications, sources)) {
+            byRecommendation.put(result.recommendationId, result);
+        }
         if (!pendingAi.isEmpty()) {
             System.enqueueJob(new FollowUpAiClassificationQueueable(pendingAi));
             for (Follow_Up_Recommendation__c rec : uniqueTargets.values()) {
                 if (pendingAi.contains(rec.Id)) {
                     ResponseResult result = new ResponseResult();
+                    result.recommendationId = rec.Id;
                     result.recommendationName = rec.Name;
                     result.category = FollowUpConstants.CATEGORY_PENDING;
                     result.pendingAiClassification = true;
-                    results.add(result);
+                    byRecommendation.put(rec.Id, result);
                 }
             }
+        }
+        // One result per input, in input order (several inputs may share a recommendation).
+        List<ResponseResult> results = new List<ResponseResult>();
+        for (Integer i = 0; i < inputs.size(); i++) {
+            results.add(byRecommendation.get(targets.get(targetKey(inputs[i], i)).Id));
         }
         return results;
     }
@@ -176,6 +189,7 @@ public with sharing class FollowUpResponseService {
             }
 
             ResponseResult result = new ResponseResult();
+            result.recommendationId = rec.Id;
             result.recommendationName = rec.Name;
             result.category = classification.category;
             result.confidence = classification.confidence;
@@ -369,11 +383,12 @@ public with sharing class FollowUpResponseService {
         List<Follow_Up_Recommendation__c> sent = Database.queryWithBinds(
             'SELECT ' +
                 FollowUpRecommendationService.RECOMMENDATION_FIELDS +
-                ' FROM Follow_Up_Recommendation__c WHERE Matter__c IN :matterIds AND Status__c = :sentStatus' +
-                ' AND Audience__c IN :audiences ORDER BY Sent_Date__c DESC NULLS LAST',
+                ' FROM Follow_Up_Recommendation__c WHERE Matter__c IN :matterIds AND Status__c IN :sentStatuses' +
+                ' AND Sent_Date__c != null AND Response_Received__c = false' +
+                ' AND Audience__c IN :audiences ORDER BY Sent_Date__c DESC',
             new Map<String, Object>{
                 'matterIds' => matterIds,
-                'sentStatus' => FollowUpConstants.STATUS_SENT,
+                'sentStatuses' => new Set<String>{ FollowUpConstants.STATUS_SENT, FollowUpConstants.STATUS_COMPLETED },
                 'audiences' => FollowUpConstants.EXTERNAL_AUDIENCES
             },
             AccessLevel.USER_MODE

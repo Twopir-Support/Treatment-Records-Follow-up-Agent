@@ -64,6 +64,8 @@ public with sharing class FollowUpAiDraftQueueable implements Queueable, Databas
         Set<String> audiences = FollowUpConstants.EXTERNAL_AUDIENCES;
         String stalledType = FollowUpConstants.TYPE_STALLED_MATTER;
         String pending = FollowUpConstants.STATUS_PENDING_REVIEW;
+        // Stalled reviews usually have their Task auto-assigned already (status Sent); still worth a summary.
+        Set<String> stalledStatuses = new Set<String>{ FollowUpConstants.STATUS_PENDING_REVIEW, FollowUpConstants.STATUS_SENT };
         String templateSource = FollowUpConstants.DRAFT_TEMPLATE;
         Id cursor = afterId;
         String query =
@@ -71,8 +73,9 @@ public with sharing class FollowUpAiDraftQueueable implements Queueable, Databas
             'Reason__c, Draft_Subject__c, Draft_Message__c, Draft_Source__c, AI_Rationale__c, Medical_Provider__c, ' +
             'Records_Request__c, Recipient_Contact__c, Response_Text__c ' +
             'FROM Follow_Up_Recommendation__c ' +
-            'WHERE Agent_Run_Id__c = :runId AND Status__c = :pending ' +
-            'AND ((Audience__c IN :audiences AND Draft_Source__c = :templateSource) OR Recommendation_Type__c = :stalledType)' +
+            'WHERE Agent_Run_Id__c = :runId ' +
+            'AND ((Status__c = :pending AND Audience__c IN :audiences AND Draft_Source__c = :templateSource) ' +
+            'OR (Recommendation_Type__c = :stalledType AND Status__c IN :stalledStatuses))' +
             (cursor == null ? '' : ' AND Id > :cursor') +
             ' ORDER BY Id LIMIT :limitSize';
         return Database.queryWithBinds(
@@ -83,6 +86,7 @@ public with sharing class FollowUpAiDraftQueueable implements Queueable, Databas
                 'audiences' => audiences,
                 'templateSource' => templateSource,
                 'stalledType' => stalledType,
+                'stalledStatuses' => stalledStatuses,
                 'cursor' => cursor,
                 'limitSize' => limitSize
             },

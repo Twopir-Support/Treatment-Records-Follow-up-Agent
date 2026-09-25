@@ -1,6 +1,6 @@
 {
   "orgName": "Treatment & Records Follow-up Agent - Dev",
-  "edition": "Developer",
+  "edition": "Enterprise",
   "features": ["EnableSetPasswordInApi"],
   "settings": {
     "lightningExperienceSettings": {

@@ -99,7 +99,7 @@ public class FollowUpTestDataFactory {
 
     public static List<Response_Classification_Rule__mdt> defaultClassificationRules() {
         return new List<Response_Classification_Rule__mdt>{
-            classification('Opt_Out', 'Client', 'stop,unsubscribe', 'Exact', 1, 'Case_Manager_Review', null),
+            classification('Opt_Out', 'Client', 'stop,unsubscribe', 'Exact', 1, 'Case_Manager_Review', 90),
             classification(
                 'Provider_Action_Required',
                 'Provider',
@@ -107,7 +107,7 @@ public class FollowUpTestDataFactory {
                 'Contains',
                 5,
                 'Case_Manager_Review',
-                null
+                14
             ),
             classification('Records_Sent', 'Provider', 'sent,faxed,mailed,uploaded', 'Contains', 10, 'Complete_And_Recheck', 7),
             classification(
@@ -117,7 +117,7 @@ public class FollowUpTestDataFactory {
                 'Contains',
                 10,
                 'Case_Manager_Review',
-                null
+                14
             ),
             classification('Callback_Requested', 'Any', 'call me,call back', 'Contains', 15, 'Case_Manager_Review', null),
             classification('Status_Question', 'Client', 'status,where is my case', 'Contains', 18, 'Case_Manager_Review', null),

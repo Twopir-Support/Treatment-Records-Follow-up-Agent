@@ -71,14 +71,14 @@ A rule runs only when **Active** is checked **and** **Threshold Days** is set.
 
 Default values and recommended tuning:
 
-| Rule | Threshold | Repeat | Other | Channel | Auto-Task | Tuning advice |
-|---|---|---|---|---|---|---|
-| **Treatment_Gap** (client check-in) | 21 days since last treatment | 7 | escalate after 2 unanswered; High ≥ 45 | SMS | No | Many PI firms use 14–30 days. Shorter thresholds create more check-ins. |
-| **Records_Follow_Up** (provider) | 14 days after request | 10 | High ≥ 45 | Email | No | Align with the firm's records-request SLA letter. |
-| **Provider_Escalation** | 7 days after the last follow-up | 14 | after 2 follow-ups | Task | **Yes** | This is the "provider misses a second follow-up" rule from the brief. |
-| **Missing_Bills** | 30 days after treatment | 30 | — | Task | No | Deactivate if 3.2 already requests bills automatically. |
-| **Stalled_Matter** | 45 days since treatment | 14 | records 30, client contact 30 | Task | **Yes** | Drives `Matter__c.Stalled__c` and the supervisor dashboard. |
-| **Client_Status_Update** (monthly) | 30 days after sign-up | 30 | — | Email | No | **Deactivate** if the firm already sends monthly updates. |
+| Rule | Trigger (defaults) | Repeat | Channel | Auto-Task | Tuning advice |
+|---|---|---|---|---|---|
+| **Treatment_Gap** (client check-in) | 21 days since last treatment; escalate after 2 unanswered; High ≥ 45 days | 7 | SMS | No | Many PI firms use 14–30 days. Shorter thresholds create more check-ins. |
+| **Records_Follow_Up** (provider) | 14 days after request; High ≥ 45 days | 10 | Email | No | Align with the firm's records-request SLA letter. |
+| **Provider_Escalation** | 2 follow-ups sent and 7 days since the last one | 14 | Task | **Yes** | This is the "provider misses a second follow-up" rule from the brief. |
+| **Missing_Bills** | 30 days after treatment, no bills request | 30 | Task | No | Deactivate if 3.2 already requests bills automatically. |
+| **Stalled_Matter** | 45 days since treatment, records 30, client contact 30 | 14 | Task | **Yes** | Drives `Matter__c.Stalled__c` and the supervisor dashboard. |
+| **Client_Status_Update** (monthly) | 30 days after sign-up | 30 | Email | No | **Deactivate** if the firm already sends monthly updates. |
 
 **Go-live recommendation:** run for 2–4 weeks with every rule active. Case managers may reject freely, and the Rejection Reason field tells you which thresholds need tuning.
 

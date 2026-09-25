@@ -65,6 +65,8 @@ The object and field names come from the specification. **They could not be veri
 
 ## Configuration
 
+Step-by-step admin guide: **[docs/configuration.md](docs/configuration.md)**.
+
 *Setup → Custom Metadata Types*:
 - **Follow-up Rule**: `Treatment_Gap` (21 d), `Records_Follow_Up` (14 d, repeat 10), `Provider_Escalation` (after 2 follow-ups + 7 d), `Missing_Bills` (30 d), `Stalled_Matter` (45/30/30 d), `Client_Status_Update` (monthly).
 - **Follow-up Setting (Default)**: open statuses, practice area, request statuses, bill types, excluded treatment statuses, restricted AI terms, confidence threshold, batch size, AI cap, pluggable class names (AI generator, AI classifier, SMS, fax), firm name, org-wide email.
